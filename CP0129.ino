@@ -2,11 +2,14 @@
 /*
 CP0129  Copyright Cyrob 2022
 Cyrob Adjustable Timed Relay by Philippe Demerliac
-See my presentation video in French : https://youtu.be/PND29Onvhac
+See my presentation videos in French :
+ https://youtu.be/PND29Onvhac
+https://youtu.be/ypF37wD5OYc
+
 =====================================================================================
 ==========================   OPEN SOURCE LICENCE   ==================================
 =====================================================================================
-Copyright 2021 Philippe Demerliac Cyrob.org
+Copyright 2022 Philippe Demerliac Cyrob.org
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
 to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
 and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -21,7 +24,7 @@ Release history
 ................................................................................................................
 Version Date        Author    Comment
 1.0     19/05/2022 Phildem   First blood
-
+1.1     14/06/2022 Phildem   Small correction in the comments
 */
 
 
@@ -44,7 +47,6 @@ typedef uint16_t CathCnt;
 #else
 typedef uint32_t CathCnt;
 #endif
-
 
 class Cath {
 
@@ -108,11 +110,11 @@ uint8_t       Cath::S_LastMilli=0;
 
 //****************************************************************************************************************
 // I/O Abstraction
-#define kOutPinLedOn              2         // Ooutput On led Active high
+#define kOutPinLedOn              2         // Output On led Active high
 #define kOutPinShutDown           3         // "Suicide" output Active high
 #define kOutPinLoad               4         // Load relay Active high
 
-#define kInPinLoadCtl             5         // Analog input for time setting
+#define kInPinLoadCtl             5         // Load On/Off pushButton, Activ-Pullup input active low
 
 #define kInPinAdPot               A0        // Analog input for time setting
 
@@ -164,16 +166,14 @@ If you want longer, you can of course modify the program to switch to hh:mm for 
 #define kAutoShutDownTaskPeriod   1000      // AutoShutDown task period in ms
 
 #define kAutoShutDownDelaySec     30        // Delay before Shutdown in sec
-#define kAutoShutDownTol          20        // Min Time change to delay shutdown
+#define kAutoShutDownTol          60        // Min Time change to delay shutdown
 
 //****************************************************************************************************************
 // Globals
-bool            gLoadOn;                    //  True if load On
-unsigned long   gDurationSec;               //  Duration in Sec Wanted if LoadOff, current if loadOn
-
+bool            gLoadOn;                    //  True if load On (Inited to 0 by compiler)
+unsigned long   gDurationSec;               //  Duration in Sec Wanted if LoadOff, current if loadOn (Inited to 0 by compiler)
 
 //Tasks___________________________________________________________________________________________________________
-
 
 
 //Clock ..........................................................................................
@@ -185,6 +185,7 @@ class Clock: public Cath {
   Clock() {
     Cath::S_Register(this,kClockTaskPeriod,kTaskShift*Cath::S_NbTask);
   }
+
   //..............................................................
   void SetUp() {
 
@@ -211,6 +212,7 @@ class TimeCtl: public Cath {
   TimeCtl() {
     Cath::S_Register(this,kTimeCtlTaskPeriod,kTaskShift*Cath::S_NbTask);
   }
+
   //..............................................................
   void SetUp() {
 
@@ -241,6 +243,7 @@ class LoadCtl: public Cath {
     m_LastButtonState=true;
     Cath::S_Register(this,kLoadCtlTaskPeriod,kTaskShift*Cath::S_NbTask);
   }
+
   //..............................................................
   void SetUp() {
     pinMode(kInPinLoadCtl,INPUT_PULLUP);
@@ -275,6 +278,7 @@ class LoadDisplay: public Cath {
   LoadDisplay() {
     Cath::S_Register(this,kLoadDisplayTaskPeriod,kTaskShift*Cath::S_NbTask);
   }
+
   //..............................................................
   void SetUp() {
     pinMode(kOutPinLedOn,OUTPUT);
@@ -302,6 +306,7 @@ class AutoShutDown: public Cath {
     m_InactivityCounter=0;
     Cath::S_Register(this,kAutoShutDownTaskPeriod,kTaskShift*Cath::S_NbTask);
   }
+  
   //..............................................................
   void SetUp() {
     pinMode(kOutPinShutDown,OUTPUT);
@@ -387,7 +392,7 @@ Adafruit_7segment m_Display = Adafruit_7segment();
 // 1 Instance of the Clock to manage time
 Clock         gClock;
 
-// 1 Instance of the Clock to manage time Setting
+// 1 Instance of the TimeCtl to manage time Setting
 TimeCtl       gTimeCtl;
 
 // 1 Instance of the LoadCtl to manage Load On/Off
